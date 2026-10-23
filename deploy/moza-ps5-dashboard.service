@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=%h/moza-ps5-current
+EnvironmentFile=-%h/.config/moza-ps5/dashboard.env
 ExecStart=%h/moza-ps5-current/.venv/bin/python -u %h/moza-ps5-current/dashboard/server.py --root %h/moza-ps5-current --host 0.0.0.0 --port 8080
 Restart=on-failure
 RestartSec=3

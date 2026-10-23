@@ -215,7 +215,7 @@ Find the Pi's address with `hostname -I` and open **`http://PI_LAN_IP:8080/`**. 
 
 Keyboard shortcuts: **S** starts, **X** stops. Closing the browser leaves the session running. Terminal fallback: `cd ~/moza-ps5-current && ./start-bridge.sh`; Ctrl+C stops it. Saved browser/terminal starts share a lock. An external bridge is shown as **EXTERNAL** and must be stopped in its own terminal. Direct raw CLI launches bypass this launcher lock.
 
-The dashboard uses Host/origin/token checks but has **no login or TLS**. Anyone who can reach its LAN interface can operate it. Keep it on a trusted local network; do not expose port 8080 to the internet.
+The dashboard uses Host/origin/token checks but has **no login or TLS**. Anyone who can reach its LAN interface can operate it. Keep it on a trusted local network; do not expose port 8080 to the internet. A Cloudflare Tunnel hostname needs an explicit HTTPS-origin allowlist and an authentication layer such as Access: [proxy setup](docs/WEB_DASHBOARD.md#https-hostname-through-cloudflare-tunnel).
 
 <details>
 <summary>Pit Control screenshot</summary>

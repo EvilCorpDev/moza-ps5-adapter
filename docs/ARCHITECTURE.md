@@ -73,7 +73,7 @@ Stop sends SIGINT, waits up to seven seconds, then uses bounded TERM/KILL fallba
 
 The page polls status, marks stale telemetry unknown, retains 180 concise messages and exports that recent view. Full managed stdout/stderr rotates separately on disk. Closing a browser does not terminate the bridge.
 
-HTTP accepts fixed actions only. Host/origin/token checks reduce cross-site and rebinding requests, but do not authenticate users. The shipped listener is plain HTTP on the LAN; reachable clients can operate it.
+HTTP accepts fixed actions only. Host/origin/token checks reduce cross-site and rebinding requests, but do not authenticate users. The shipped listener is plain HTTP on the LAN; reachable clients can operate it. An optional exact HTTPS-origin allowlist supports a protected reverse proxy with a different external port. It does not infer trust from forwarded headers. Public hostnames require an authentication layer such as Cloudflare Access; see the [dashboard guide](WEB_DASHBOARD.md#https-hostname-through-cloudflare-tunnel).
 
 ## Firmware profiles
 

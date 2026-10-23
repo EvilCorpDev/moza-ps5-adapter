@@ -4,6 +4,7 @@
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
 import secrets
 import signal
@@ -25,14 +26,43 @@ ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/favicon.svg': ('favicon.svg', 'image/svg+xml')}
 
 
+def authority(value):
+    """Parse one Host authority without accepting URL/path/userinfo syntax."""
+    if not value or any(not 33 <= ord(char) <= 126 or char in '/\\?#@,' for char in value):
+        raise ValueError('Invalid dashboard host')
+    parsed = urlsplit('//' + value)
+    port = parsed.port
+    if not parsed.hostname or port == 0 or value.endswith(':'):
+        raise ValueError('Invalid dashboard host')
+    name = parsed.hostname.lower()
+    host = f'[{name}]' if ':' in name else name
+    canonical = host + (f':{port}' if port is not None else '')
+    if value.lower() != canonical or any(char in name for char in '%*"\''):
+        raise ValueError('Invalid dashboard host')
+    return name, port
+
+
+def public_origin(value):
+    """Public origins must be explicit HTTPS URLs; forwarded headers grant nothing."""
+    parsed = urlsplit(value)
+    if (parsed.scheme != 'https' or parsed.path not in ('', '/')
+            or '?' in value or '#' in value or any(char.isspace() for char in value)):
+        raise ValueError('Public dashboard origins must be HTTPS origins without paths')
+    name, port = authority(parsed.netloc)
+    port = port or 443
+    host = f'[{name}]' if ':' in name else name
+    return (name, port), 'https://' + host + (f':{port}' if port != 443 else '')
+
+
 class DashboardServer(ThreadingHTTPServer):
     daemon_threads = True
     block_on_close = False
 
-    def __init__(self, address, controller):
+    def __init__(self, address, controller, *, public_origins=()):
         self.controller = controller
         self.token = secrets.token_hex(32)
         self.hostnames = {'localhost', 'wheelpi', 'wheelpi.local', socket.gethostname().lower()}
+        self.public_origins = dict(public_origin(value) for value in public_origins)
         super().__init__(address, Handler)
 
     def get_request(self):
@@ -47,17 +77,22 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
 
-    def valid_host(self):
+    def request_origin(self):
         try:
-            raw = self.headers.get('Host', '')
-            parsed = urlsplit('http://' + raw)
-            name = (parsed.hostname or '').lower()
-            return (not parsed.username and not parsed.password and not parsed.path
-                    and not parsed.query and not parsed.fragment
-                    and (parsed.port or 80) == self.server.server_port
-                    and name in self.server.hostnames | {self.connection.getsockname()[0], '127.0.0.1', '::1'})
+            hosts = self.headers.get_all('Host', [])
+            if len(hosts) != 1:
+                return None
+            raw = hosts[0]
+            name, port = authority(raw)
+            configured = self.server.public_origins.get((name, port or 443))
+            if configured:
+                return configured
+            local_names = self.server.hostnames | {self.connection.getsockname()[0], '127.0.0.1', '::1'}
+            if (port or 80) == self.server.server_port and name in local_names:
+                return 'http://' + raw.lower()
         except ValueError:
-            return False
+            pass
+        return None
 
     def send_data(self, code, body, content_type='application/json; charset=utf-8', *, download=False):
         if isinstance(body, str): body = body.encode('utf-8')
@@ -77,8 +112,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_data(code, json.dumps(value))
 
     def do_GET(self):
-        if not self.valid_host():
-            return self.send_json(403, {'error': 'Use the Pi hostname or IP address to open this dashboard.'})
+        if not self.request_origin():
+            return self.send_json(403, {'error': 'Use the Pi address or a configured public dashboard origin.'})
         path = urlsplit(self.path).path
         if path == '/api/status':
             value = self.server.controller.snapshot()
@@ -92,11 +127,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(404, {'error': 'Not found.'})
 
     def do_POST(self):
-        if not self.valid_host():
+        expected_origin = self.request_origin()
+        if not expected_origin:
             return self.send_json(403, {'error': 'Invalid dashboard address.'})
-        expected_origin = 'http://' + self.headers.get('Host', '').lower()
         if self.headers.get('Origin', '').lower() != expected_origin:
-            return self.send_json(403, {'error': 'Open this dashboard directly on the Pi address.'})
+            return self.send_json(403, {'error': 'Open this dashboard directly at its configured address.'})
         if not secrets.compare_digest(self.headers.get('X-Bridge-Token', ''), self.server.token):
             return self.send_json(403, {'error': 'Dashboard session changed. Reload the page.'})
         if self.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/json':
@@ -125,11 +160,18 @@ def main():
     ap.add_argument('--root', required=True, type=Path)
     ap.add_argument('--host', default='0.0.0.0')
     ap.add_argument('--port', type=int, default=8080)
+    ap.add_argument('--public-origin', action='append', default=[],
+                    help='explicit HTTPS browser origin behind a protected reverse proxy (repeatable)')
     args = ap.parse_args()
+    origins = os.environ.get('PIT_CONTROL_PUBLIC_ORIGINS', '').split() + args.public_origin
+    try:
+        for value in origins: public_origin(value)
+    except ValueError as exc:
+        ap.error(str(exc))
     controller = BridgeController(args.root)
     server = None
     try:
-        server = DashboardServer((args.host, args.port), controller)
+        server = DashboardServer((args.host, args.port), controller, public_origins=origins)
         def shutdown(*_): Thread(target=server.shutdown, name='http-shutdown', daemon=True).start()
         signal.signal(signal.SIGTERM, shutdown)
         print(f'Pit Control listening on {args.host}:{server.server_port}; bridge starts only on request.', flush=True)

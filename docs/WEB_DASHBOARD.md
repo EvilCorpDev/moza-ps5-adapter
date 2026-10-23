@@ -45,6 +45,40 @@ HTTP controls have Host, same-origin and request-token checks, fixed asset route
 
 The browser shows a saved 25% profile. These labels are fixed UI/controller metadata, not values read from hardware or the launcher's arguments. Update them if you change the saved profile.
 
+## HTTPS hostname through Cloudflare Tunnel
+
+The server rejects unconfigured Host headers by default. A tunnel also changes the browser's origin from local HTTP to public HTTPS, so changing the Host alone is insufficient for Start/Stop.
+
+First protect the hostname with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/) and an Allow policy for the intended users. A tunnel alone is not login protection. Have `cloudflared` validate Access tokens using **Protect with Access** where applicable. Host/origin/token checks in this app do not replace authentication.
+
+Keep the tunnel's service pointing to the Pi dashboard, for example `http://192.168.50.62:8080` if the connector is on another LAN machine, or `http://127.0.0.1:8080` if it runs on the Pi. Preserve the browser Host header; do not rewrite it to localhost.
+
+Configure the exact public origin on the Pi:
+
+```sh
+mkdir -p ~/.config/moza-ps5
+nano ~/.config/moza-ps5/dashboard.env
+```
+
+Add, substituting your hostname:
+
+```ini
+PIT_CONTROL_PUBLIC_ORIGINS=https://wheelpi.example.com
+```
+
+After installing the updated unit, park and stop the bridge, then restart the dashboard:
+
+```sh
+systemctl --user daemon-reload
+systemctl --user restart moza-ps5-dashboard.service
+```
+
+The optional environment file is user-local and is not copied into the repository. Separate multiple origins with spaces inside a quoted environment value. For manual server launches, `--public-origin https://wheelpi.example.com` is repeatable. Only explicit HTTPS origins are accepted; no wildcard hosts or URL paths are supported.
+
+The server matches the configured public authority and requires its exact HTTPS Origin plus the existing request token for control actions. The external HTTPS port may differ from the Pi's HTTP port. It does not trust `X-Forwarded-Host`, `X-Forwarded-Proto` or `Forwarded` to grant access. Existing local hostname/IP access on the listening port remains available.
+
+Verify the browser page and console connect at the HTTPS URL. Check control requests with a simulated bridge when testing changes; do not use a production Start action merely as a connectivity probe. Confirm that an unauthenticated external browser is intercepted by Access before enabling remote physical controls.
+
 ## Logs
 
 - Browser: latest 180 concise messages; Export downloads that recent view.

@@ -13,7 +13,7 @@ import time
 import unittest
 
 from dashboard.controller import BridgeController
-from dashboard.server import DashboardServer
+from dashboard.server import DashboardServer, public_origin
 
 ROOT = Path(__file__).resolve().parents[2]
 DUMMY = """import signal,time,sys
@@ -131,7 +131,8 @@ class FakeController:
 class HttpTests(unittest.TestCase):
     def setUp(self):
         self.controller = FakeController()
-        self.server = DashboardServer(('127.0.0.1', 0), self.controller)
+        self.server = DashboardServer(('127.0.0.1', 0), self.controller,
+                                      public_origins=['https://dashboard.example/'])
         self.thread = Thread(target=lambda: self.server.serve_forever(poll_interval=.01), daemon=True)
         self.thread.start()
         self.authority = f'127.0.0.1:{self.server.server_port}'
@@ -177,6 +178,79 @@ class HttpTests(unittest.TestCase):
         headers = self.headers(); headers['Host'] = 'other.example:' + str(self.server.server_port)
         self.assertEqual(self.request('POST', '/api/start', '{}', headers)[0], 403)
         self.assertEqual(self.controller.starts, 0)
+
+    def test_explicit_https_origin_can_load_and_control_through_http_proxy(self):
+        for host in ('dashboard.example', 'dashboard.example:443'):
+            with self.subTest(host=host):
+                self.assertEqual(self.request('GET', '/', headers={'Host': host})[0], 200)
+                status, _, body = self.request('GET', '/api/status', headers={'Host': host})
+                self.assertEqual(status, 200)
+                self.assertEqual(json.loads(body)['token'], self.server.token)
+                headers = self.headers()
+                headers.update(Host=host, Origin='https://dashboard.example')
+                self.assertEqual(self.request('POST', '/api/start', '{}', headers)[0], 202)
+                self.assertEqual(self.request('POST', '/api/stop', '{}', headers)[0], 202)
+        self.assertEqual((self.controller.starts, self.controller.stops), (2, 2))
+
+    def test_public_origin_rejects_http_cross_origin_and_missing_token(self):
+        for origin in ('http://dashboard.example', 'https://other.example',
+                       'https://dashboard.example.attacker.test', 'null', ''):
+            with self.subTest(origin=origin):
+                headers = self.headers()
+                headers.update(Host='dashboard.example', Origin=origin)
+                self.assertEqual(self.request('POST', '/api/start', '{}', headers)[0], 403)
+        headers = {'Host': 'dashboard.example', 'Origin': 'https://dashboard.example',
+                   'Content-Type': 'application/json'}
+        self.assertEqual(self.request('POST', '/api/start', '{}', headers)[0], 403)
+        self.assertEqual(self.controller.starts, 0)
+
+    def test_forwarded_headers_cannot_authorize_unknown_host_or_change_lan_origin(self):
+        forwarded = {'X-Forwarded-Host': 'dashboard.example', 'X-Forwarded-Proto': 'https',
+                     'Forwarded': 'host=dashboard.example;proto=https'}
+        headers = self.headers()
+        headers.update(forwarded, Host='other.example', Origin='https://dashboard.example')
+        self.assertEqual(self.request('GET', '/api/status', headers=headers)[0], 403)
+        self.assertEqual(self.request('POST', '/api/start', '{}', headers)[0], 403)
+        headers.update(Host=self.authority, Origin='https://' + self.authority)
+        self.assertEqual(self.request('POST', '/api/start', '{}', headers)[0], 403)
+        headers['Origin'] = 'http://' + self.authority
+        self.assertEqual(self.request('POST', '/api/start', '{}', headers)[0], 202)
+
+    def test_public_host_suffix_bad_port_and_url_syntax_are_rejected(self):
+        for host in ('dashboard.example.attacker.test', 'dashboard.example:80',
+                     'dashboard.example:8080', 'dashboard.example:0',
+                     'dashboard.example:99999', 'dashboard.example:',
+                     'user@dashboard.example', 'dashboard.example/path',
+                     'dashboard.example?query', 'dashboard.example#fragment',
+                     'dashboard.example,other.example', 'dashboard.example\\other'):
+            with self.subTest(host=host):
+                self.assertEqual(self.request('GET', '/api/status', headers={'Host': host})[0], 403)
+
+    def test_duplicate_host_headers_are_rejected(self):
+        connection = http.client.HTTPConnection('127.0.0.1', self.server.server_port, timeout=2)
+        try:
+            connection.putrequest('GET', '/api/status', skip_host=True)
+            connection.putheader('Host', self.authority)
+            connection.putheader('Host', 'dashboard.example')
+            connection.endheaders()
+            self.assertEqual(connection.getresponse().status, 403)
+        finally:
+            connection.close()
+
+    def test_public_origin_configuration_is_explicit_and_https_only(self):
+        with DashboardServer(('127.0.0.1', 0), self.controller) as server:
+            self.assertEqual(server.public_origins, {})
+        self.assertEqual(public_origin('https://DASHBOARD.example:8443/'),
+                         (('dashboard.example', 8443), 'https://dashboard.example:8443'))
+        for value in ('http://dashboard.example', 'dashboard.example',
+                      'https://dashboard.example/path', 'https://user@dashboard.example',
+                      'https://dashboard.example?', 'https://dashboard.example#',
+                      'https://dashboard.example:0', 'https://dashboard.example:99999',
+                      'https://*.example', ' https://dashboard.example',
+                      'https://dash\tboard.example', 'https://dashboard.\nexample',
+                      'https://dashboard.example\\other', 'https://[::1]other'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                public_origin(value)
 
     def test_browser_cannot_supply_shell_command_or_gain(self):
         self.assertEqual(self.request('POST', '/api/start', '{"gain": 1, "command": "anything"}', self.headers())[0], 400)
