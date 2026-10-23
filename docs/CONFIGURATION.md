@@ -40,11 +40,13 @@ JSON `buttons` maps Linux **key-code strings** to PlayStation target names. Game
 | A / B / X / Y | 288 / 289 / 290 / 291 | `cross` / `circle` / `square` / `triangle` |
 | Shift down / Shift up | 300 / 301 | `L1` / `R1` |
 | WIP / N | 707 / 706 | `L2` / `R2` |
-| Box / Start | 720 / 723 | `share` / `options` |
+| Box / Start / Menu | 720 / 723 / 725 | `share` / `options` / `options` |
 | Radio / Cam | 710 / 709 | `L3` / `R3` |
-| Home / Menu | 712 / 725 | `PS` / `touchpad` |
+| Home | 712 | `PS` |
 | D-pad up / right / down / left | 292 / 293 / 294 / 295 | `hat` directions |
 | S1 / P / PL / R / S2 | 711 / 719 / 721 / 722 / 724 | Unassigned |
+
+Menu sends **Options** for the game's menu/pause action; Start is an alias for the same target. No physical button is assigned Touchpad in the default map.
 
 The report has fourteen button targets. Accepted names, with exact case:
 
@@ -52,7 +54,7 @@ The report has fourteen button targets. Accepted names, with exact case:
 square cross circle triangle L1 R1 L2 R2 share options L3 R3 PS touchpad
 ```
 
-For example, move Options from Start to S1 by removing `"723": "options"` and adding `"711": "options"`. Update `unassigned`/`physical_labels` metadata for clarity. Two physical keys may share one target, but the game cannot distinguish them. D-pad keys must be distinct from each other and from mapped buttons.
+For example, make S1 an additional Options button by adding `"711": "options"` and removing `711` from `unassigned`. Update `physical_labels` metadata if labels change. Two physical keys may share one target, but the game cannot distinguish them. D-pad keys must be distinct from each other and from mapped buttons.
 
 ### Axes and calibration
 

@@ -41,7 +41,7 @@ def test_captured_pedal_endpoints_release_tolerance_and_inversion(role, pressed)
 
 EXPECTED_BUTTONS = {"X":1, "A":2, "B":4, "Y":8, "Shift down":16, "Shift up":32,
                     "WIP":64, "N":128, "Box":256, "Start":512, "Radio":1024,
-                    "Cam":2048, "Home":4096, "Menu":8192}
+                    "Cam":2048, "Home":4096, "Menu":512}
 HATS = {"D-pad up":0, "D-pad right":2, "D-pad down":4, "D-pad left":6}
 
 
