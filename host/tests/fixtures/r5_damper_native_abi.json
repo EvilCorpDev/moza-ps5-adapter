@@ -1,0 +1,17 @@
+{
+  "ff_effect_bytes": 48,
+  "union_offset": 16,
+  "replay_offset": 10,
+  "input_event_bytes": 24,
+  "EVIOCSFF": 1076905344,
+  "EVIOCRMFF": 1074021761,
+  "condition_bytes": 12,
+  "condition_right_coeff_offset": 4,
+  "condition_left_coeff_offset": 6,
+  "damper_hex": "550007000040000000009600000000000004000438fe7b00000000000000000000000000000000000000000000000000",
+  "source_sha256": "55cdf6f7cfa6ee7537240a3539fd64b229bf4ce7a71033223b44511ec3071587",
+  "read_only": true,
+  "device_opened": false,
+  "python_matches_c": true,
+  "provenance": "Independent C input.h layout probe on 64-bit Raspberry Pi Linux; no device opened."
+}

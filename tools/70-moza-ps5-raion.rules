@@ -1,0 +1,3 @@
+# Allow plugdev members to use only the Razer Raion PS4 USB authentication donor.
+# The host's hidapi build uses libusb, so this matches the USB device node.
+SUBSYSTEM=="usb", ATTR{idVendor}=="1532", ATTR{idProduct}=="1100", GROUP="plugdev", MODE="0660"

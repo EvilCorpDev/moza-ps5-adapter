@@ -1,0 +1,38 @@
+{
+  "schema": "moza-r5-input-map-v1",
+  "name": "Captured R5 / ESX / SR-P Lite with clutch (900 degrees)",
+  "device": {"vid": "346e", "pid": "0004"},
+  "hardware": {"rim": "MOZA ESX (identified by Pit House screenshot)", "pedals": "SR-P Lite with clutch", "connection": "all through R5 base", "steering_rotation_degrees": 900},
+  "evidence_sha256": "324b585febbfcafeebe4584168c76017a1994617a54d2512ce561ccd604450f6",
+  "axes": {
+    "steering": {"code": 0, "minimum": -32768, "maximum": 32767},
+    "throttle": {"code": 2, "minimum": -32768, "maximum": 32767, "released": -32768, "pressed": 31589, "release_deadzone": 256},
+    "brake": {"code": 5, "minimum": -32768, "maximum": 32767, "released": -32768, "pressed": 32569, "release_deadzone": 256},
+    "clutch": {"code": 6, "minimum": -32768, "maximum": 32767, "released": -32768, "pressed": 32509, "release_deadzone": 256}
+  },
+  "hat": {"up": 292, "right": 293, "down": 294, "left": 295},
+  "buttons": {
+    "288": "cross",
+    "289": "circle",
+    "290": "square",
+    "291": "triangle",
+    "300": "L1",
+    "301": "R1",
+    "706": "R2",
+    "707": "L2",
+    "709": "R3",
+    "710": "L3",
+    "712": "PS",
+    "720": "share",
+    "723": "options",
+    "725": "touchpad"
+  },
+  "physical_labels": {
+    "288": "A", "289": "B", "290": "X", "291": "Y",
+    "292": "D-pad up", "293": "D-pad right", "294": "D-pad down", "295": "D-pad left",
+    "300": "Shift down", "301": "Shift up", "706": "N", "707": "WIP",
+    "709": "Cam", "710": "Radio", "711": "S1", "712": "Home", "719": "P",
+    "720": "Box", "721": "PL", "722": "R", "723": "Start", "724": "S2", "725": "Menu"
+  },
+  "unassigned": [711, 719, 721, 722, 724]
+}

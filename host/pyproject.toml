@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "moza-ps5-diagnostics"
+version = "0.1.0"
+description = "Diagnostics bridge for an experimental MOZA R5 to PS5 adapter"
+requires-python = ">=3.10"
+dependencies = ["pyserial==3.5", "hidapi==0.15.0"]
+
+[project.scripts]
+moza-ps5 = "moza_ps5.cli:main"
+
+[tool.setuptools]
+packages = ["moza_ps5"]
+
+[tool.setuptools.package-data]
+moza_ps5 = ["profiles/*.json"]

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0e0c">
+  <title>Pit Control — MOZA R5</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+<div class="shell">
+  <header class="masthead">
+    <a class="brand" href="/" aria-label="Pit Control home"><span class="brand-mark">R5</span><span>MOZA <span class="dim">/</span> PS5</span></a>
+    <div class="connection"><span class="dot" id="server-dot"></span><span id="server-status">CONNECTING</span><span class="divider">/</span><time id="clock">--:--:--</time></div>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="slash">//</span> WHEELPI · LOCAL GARAGE</p>
+        <h1 id="title">PIT<br><span>CONTROL_</span></h1>
+        <p class="intro">Wheel on. Bridge up. Go racing.</p>
+      </div>
+      <div class="car-panel" aria-label="ASCII race car illustration" role="img">
+        <div class="car-caption"><span>[ GARAGE / 01 ]</span><span>R5 → PS5</span></div>
+<pre class="car" aria-hidden="true">                              _.-="_-         _
+                         _.-="   _-          | ||"""""""---._______     __..
+             ___.===""""-.______-,,,,,,,,,,,,`-''----" """""       """""  __'
+      __.--""     __        ,'                   o \           __        [__|
+ __-""=======.--""  ""--.=================================.--""  ""--.=======:
+]       [w] : /        \ : |========================|    : /        \ :  [w] :
+V___________:|          |: |========================|    :|          |:   _-"
+ V__________: \        / :_|=======================/_____: \        / :__-"
+ -----------'  "-____-"  `-------------------------------'  "-____-"</pre>
+        <div class="car-footer"><span>FORCE / DAMPING / REV LIGHTS</span><span class="accent">READY FOR THE GRID</span></div>
+      </div>
+    </section>
+
+    <div class="notice hidden" id="notice" role="status" aria-live="polite"></div>
+
+    <section class="session" aria-labelledby="session-title">
+      <div class="section-heading"><h2 id="session-title"><span class="slash">01</span> SESSION CONTROL</h2><span class="state-tag" id="state-tag">CONNECTING</span></div>
+      <div class="stats">
+        <div class="stat"><span class="stat-label">BRIDGE</span><strong id="bridge-state">—</strong><span class="stat-detail" id="bridge-detail">Waiting for dashboard</span></div>
+        <div class="stat"><span class="stat-label">R5 WHEELBASE</span><strong id="r5-state">—</strong><span class="stat-detail">Steering + pedals</span></div>
+        <div class="stat"><span class="stat-label">PS5 LINK</span><strong id="pico-state">—</strong><span class="stat-detail" id="pico-detail">Pico USB connection</span></div>
+        <div class="stat profile"><span class="stat-label">SAVED FORCE GAIN</span><strong>25<span class="percent">%</span></strong><span class="stat-detail">Your tuned profile</span></div>
+      </div>
+      <div class="control-row">
+        <button class="button start" id="start" disabled><span class="button-symbol">▶</span><span>START BRIDGE</span><kbd>S</kbd></button>
+        <button class="button stop" id="stop" disabled><span class="button-symbol">■</span><span>STOP</span><kbd>X</kbd></button>
+      </div>
+      <div class="profile-strip"><span><i></i> DAMPING ON</span><span><i></i> GAME REV LIGHTS</span><span id="uptime">SESSION —</span></div>
+    </section>
+
+    <section class="quick-start" aria-label="Connection sequence">
+      <div><span class="step">1</span><p>Power on the R5.<br><span>Leave Pico USB unplugged.</span></p></div>
+      <div><span class="step">2</span><p>Start the bridge.<br><span>Connect Pico to the PS5.</span></p></div>
+      <div><span class="step">3</span><p>Select your user. Drive.<br><span>Park before pressing Stop.</span></p></div>
+    </section>
+
+    <section class="terminal" aria-labelledby="log-title">
+      <div class="terminal-bar">
+        <h2 id="log-title"><span class="terminal-prompt">&gt;_</span> BRIDGE CONSOLE</h2>
+        <div class="log-tools"><label><input id="autoscroll" type="checkbox" checked> AUTO-SCROLL</label><a href="/api/logs/export" download="wheel-bridge-recent.log">↓ EXPORT</a></div>
+      </div>
+      <div class="log-body" id="logs" role="log" aria-label="Recent bridge messages" aria-live="off" tabindex="0"><div class="empty-log" id="empty-log">Connecting to wheelpi<span class="cursor">_</span></div></div>
+      <div class="terminal-bottom"><span><span class="accent">racer@wheelpi</span><span class="dim">:~$</span> <span id="console-status">waiting for connection</span></span><span id="line-count">0 LINES</span></div>
+    </section>
+  </main>
+  <footer><span>PIT CONTROL <span class="dim">/</span> MOZA R5 → PLAYSTATION 5</span><span>BUILT TO DRIVE. <span class="accent">NOT TO SSH.</span></span></footer>
+</div>
+</body>
+</html>
